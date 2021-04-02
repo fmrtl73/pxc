@@ -1,6 +1,3 @@
-#!/bin/bash
-#
-#
 # Copyright © 2020 Portworx
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,30 +18,27 @@
 required="kubectl kubectl-pxc"
 
 for req in $required ; do
-	if ! which $req > /dev/null 2>&1 ; then
-		echo "$req is required"
-		exit
-	fi
+        if ! which $req > /dev/null 2>&1 ; then
+                echo "$req is required"
+                exit
+        fi
 done
 
 
 if [ "$1" = "-n" ] ; then
-	NODE=$2
-	shift 2
+        NODE=$2
+        shift 2
 else
-	nodes=$(kubectl pxc node list -o json | jq -r '.[].hostname')
-	for node in $nodes ; do
-		status=$(kubectl pxc node get $node -o json | jq -r '.[].status')
-		if [ $status -eq 2 ] ; then
-			NODE=$node
-			break 1
-		fi
-	done
+        nodes=$(kubectl pxc node list | grep Ready | awk '{print $1}')
+        for node in $nodes ; do
+          NODE=$node
+          break 1
+        done
 fi
 
 if [ -z "$NODE" ] ; then
-	echo "Unable to find node that is online"
-	exit 1
+        echo "Unable to find node that is online"
+        exit 1
 fi
 
 echo ">> Running pxctl on $NODE"
